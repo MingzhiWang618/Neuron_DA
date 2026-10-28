@@ -1,0 +1,41 @@
+_base_:
+- config.yaml
+
+experiment_name: ac4_oracle_contrastive
+description: >
+  Fully supervised AC4 oracle using the labeled 80-slice train split and the
+  disjoint labeled 20-slice validation split with MedNeXt-S, 3 nearest-neighbor affinities,
+  and voxel-level instance contrastive supervision.
+
+save_path: outputs/domain_adaptation/ac4_oracle_contrastive
+
+default:
+  data:
+    label_transform:
+      resolution: [30, 6, 6]
+
+train:
+  data:
+    train:
+      image: dataset/AC3-AC4/AC4_train_inputs.h5
+      label: dataset/AC3-AC4/AC4_train_labels.h5
+      resolution: [30, 6, 6]
+    val:
+      image: dataset/AC3-AC4/AC4_val_inputs.h5
+      label: dataset/AC3-AC4/AC4_val_labels.h5
+      resolution: [30, 6, 6]
+
+test:
+  data:
+    test:
+      path: ""
+      image: dataset/AC3-AC4/AC4_val_inputs.h5
+      label: dataset/AC3-AC4/AC4_val_labels.h5
+      resolution: [30, 6, 6]
+
+tune:
+  data:
+    val:
+      image: dataset/AC3-AC4/AC4_val_inputs.h5
+      label: dataset/AC3-AC4/AC4_val_labels.h5
+      resolution: [30, 6, 6]

@@ -1,0 +1,109 @@
+# Fully supervised target-domain oracle for the AC4 -> CREMI-A setting.
+_base_:
+- ../../../tutorials/neuron_snemi/neuron_snemi.yaml
+
+experiment_name: cremi_a_oracle_contrastive
+description: >
+  Fully supervised CREMI-A oracle using a MedNeXt-S nearest-neighbor 3-affinity model
+  and voxel-level instance contrastive objective as the source-only baseline.
+  The labeled 100-slice CREMI-A train split is used for optimization and the
+  disjoint labeled 25-slice split is used only for validation/model selection.
+
+save_path: outputs/domain_adaptation/cremi_a_oracle_contrastive
+
+default:
+  system:
+    num_gpus: 2
+    num_workers: 4
+  model:
+    input_size: [16, 256, 256]
+    output_size: [16, 256, 256]
+    # Override the inherited aff12 pipeline head. Only XYZ nearest-neighbor
+    # affinities are predicted in the new native-resolution experiments.
+    out_channels: 3
+  data:
+    split_enabled: false
+    dataloader:
+      patch_size: [16, 256, 256]
+      # 4 patches/rank x 2 ranks = global batch 8. This lowers activation
+      # memory and iteration latency; the iteration-based schedule is unchanged.
+      batch_size: 4
+      use_preloaded_cache_train: false
+      use_preloaded_cache_val: false
+      use_lazy_zarr: false
+      use_lazy_h5: true
+      persistent_workers: false
+    label_transform:
+      resolution: [40, 4, 4]
+      # Preserve integer instances for the auxiliary voxel contrastive loss.
+      emit_gt_seg: true
+      # Explicit lists replace the inherited label_aff12 target list.
+      targets:
+      - name: affinity
+        kwargs:
+          offsets:
+          - "0-0-1"
+          - "0-1-0"
+          - "1-0-0"
+          affinity_mode: deepem
+    data_transform:
+      pad_size: [8, 128, 128]
+  inference:
+    model:
+      select_channel: [0, 1, 2]
+      crop_pad: [7, 8, 127, 128, 127, 128]
+    window:
+      window_size: [16, 256, 256]
+      sw_batch_size: 2
+
+train:
+  data:
+    train:
+      image: dataset/CREMI/CREMI_A_train_raw.h5
+      label: dataset/CREMI/CREMI_A_train_labels.h5
+      resolution: [40, 4, 4]
+    val:
+      image: dataset/CREMI/CREMI_A_test_raw.h5
+      label: dataset/CREMI/CREMI_A_test_labels.h5
+      resolution: [40, 4, 4]
+  optimization:
+    max_epochs: 100
+    n_steps_per_epoch: 1000
+    accumulate_grad_batches: 1
+  monitor:
+    logging:
+      scalar:
+        loss:
+        - train_loss_total_epoch
+        - train_loss_supervised_epoch
+        - train_loss_contrastive_epoch
+        - train_loss_contrastive_weighted_epoch
+        - val_loss_total
+        loss_every_n_steps: 50
+    checkpoint:
+      # Retain every completed epoch instead of pruning to the best three.
+      save_top_k: -1
+      monitor: val_loss_total
+      mode: min
+      save_every_n_epochs: 1
+      checkpoint_filename: "{epoch:03d}-{val_loss_total:.4f}"
+
+test:
+  system:
+    num_gpus: 1
+  data:
+    test:
+      path: ""
+      image: dataset/CREMI/CREMI_A_test_raw.h5
+      label: dataset/CREMI/CREMI_A_test_labels.h5
+      resolution: [40, 4, 4]
+  inference:
+    window:
+      distributed_sharding: false
+
+tune:
+  data:
+    val:
+      image: dataset/CREMI/CREMI_A_test_raw.h5
+      label: dataset/CREMI/CREMI_A_test_labels.h5
+      resolution: [40, 4, 4]

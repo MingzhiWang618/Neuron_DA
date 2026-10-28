@@ -1,0 +1,3 @@
+# Explicit CREMI-A entry point. Shared defaults and dataset split live in config.yaml.
+_base_:
+- config.yaml

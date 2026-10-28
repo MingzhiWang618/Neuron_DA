@@ -1,0 +1,10 @@
+# Research-only settings kept outside the strict PyTC schema.
+weight: 0.1
+feature_layer: model.dec_block_0.1
+feature_channels: 32
+projection_hidden_channels: 64
+projection_channels: 32
+sample_temperature: 0.6
+max_batch_samples: 4
+sample_k: 128
+instance_discrimination_temperature: 0.3

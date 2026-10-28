@@ -1,0 +1,36 @@
+_base_:
+- config.yaml
+
+experiment_name: cremi_b_oracle_contrastive
+description: >
+  Fully supervised CREMI-B oracle using the labeled 100-slice train split and
+  the disjoint labeled 25-slice validation split with MedNeXt-S, 3 nearest-neighbor affinities,
+  and voxel-level instance contrastive supervision.
+
+save_path: outputs/domain_adaptation/cremi_b_oracle_contrastive
+
+train:
+  data:
+    train:
+      image: dataset/CREMI/CREMI_B_train_raw.h5
+      label: dataset/CREMI/CREMI_B_train_labels.h5
+      resolution: [40, 4, 4]
+    val:
+      image: dataset/CREMI/CREMI_B_test_raw.h5
+      label: dataset/CREMI/CREMI_B_test_labels.h5
+      resolution: [40, 4, 4]
+
+test:
+  data:
+    test:
+      path: ""
+      image: dataset/CREMI/CREMI_B_test_raw.h5
+      label: dataset/CREMI/CREMI_B_test_labels.h5
+      resolution: [40, 4, 4]
+
+tune:
+  data:
+    val:
+      image: dataset/CREMI/CREMI_B_test_raw.h5
+      label: dataset/CREMI/CREMI_B_test_labels.h5
+      resolution: [40, 4, 4]
